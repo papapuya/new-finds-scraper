@@ -19,12 +19,12 @@ app.get('/health', (req, res) => {
 });
 
 // --- Helper: Login ---
-async function ensureLogin(page, credentials) {
+async function ensureLogin(page, credentials, baseUrl) {
   const cookies = []; // In production: load cookies from file or DB
   
   if (cookies.length > 0) {
     await page.context().addCookies(cookies);
-    await page.goto('https://b2b.wuerth.de/');
+    await page.goto(baseUrl);
     await page.waitForTimeout(2000);
     
     const isLoggedIn = await page.locator('text=Logout').isVisible().catch(() => false);
@@ -35,7 +35,7 @@ async function ensureLogin(page, credentials) {
   }
 
   console.log('Logging in...');
-  await page.goto('https://b2b.wuerth.de/');
+  await page.goto(baseUrl);
   await page.fill('input[name="username"]', credentials.username);
   await page.fill('input[name="password"]', credentials.password);
   await page.click('button[type="submit"]');
@@ -55,7 +55,11 @@ async function scrapeProducts(url, credentials, onlyNew = false) {
   const page = await context.newPage();
 
   try {
-    await ensureLogin(page, credentials);
+    // Extract base URL for login
+    const urlObj = new URL(url);
+    const baseUrl = `${urlObj.protocol}//${urlObj.host}`;
+    
+    await ensureLogin(page, credentials, baseUrl);
 
     console.log(`Navigating to: ${url}`);
     await page.goto(url);

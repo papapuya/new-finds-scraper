@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      suppliers: {
+        Row: {
+          active: boolean | null
+          auto_login_enabled: boolean | null
+          created_at: string | null
+          created_by: string | null
+          css_selector_product_link: string | null
+          description: string | null
+          id: string
+          login_url: string | null
+          name: string
+          password_field_selector: string | null
+          password_value: string | null
+          product_selectors: Json | null
+          session_cookie: string | null
+          supplier_id: string
+          test_url: string | null
+          updated_at: string | null
+          url_pattern: string
+          use_session_cookies: boolean | null
+          user_agent: string | null
+          username_field_selector: string | null
+          username_value: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          auto_login_enabled?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          css_selector_product_link?: string | null
+          description?: string | null
+          id?: string
+          login_url?: string | null
+          name: string
+          password_field_selector?: string | null
+          password_value?: string | null
+          product_selectors?: Json | null
+          session_cookie?: string | null
+          supplier_id: string
+          test_url?: string | null
+          updated_at?: string | null
+          url_pattern: string
+          use_session_cookies?: boolean | null
+          user_agent?: string | null
+          username_field_selector?: string | null
+          username_value?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          auto_login_enabled?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          css_selector_product_link?: string | null
+          description?: string | null
+          id?: string
+          login_url?: string | null
+          name?: string
+          password_field_selector?: string | null
+          password_value?: string | null
+          product_selectors?: Json | null
+          session_cookie?: string | null
+          supplier_id?: string
+          test_url?: string | null
+          updated_at?: string | null
+          url_pattern?: string
+          use_session_cookies?: boolean | null
+          user_agent?: string | null
+          username_field_selector?: string | null
+          username_value?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

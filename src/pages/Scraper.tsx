@@ -15,7 +15,7 @@ const Scraper = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
 
-  const handleScrape = async (request: { url: string; onlyNew: boolean; credentials: { username: string; password: string }; backendUrl: string }) => {
+  const handleScrape = async (url: string, onlyNew: boolean) => {
     setIsLoading(true);
     setProgress(0);
     setCurrentPage(0);
@@ -23,15 +23,34 @@ const Scraper = () => {
     setProducts([]);
 
     try {
-      const response = await fetch(`${request.backendUrl}/api/scrape`, {
+      const backendUrl = import.meta.env.VITE_EXTERNAL_SCRAPER_URL;
+      const username = import.meta.env.VITE_B2B_USER;
+      const password = import.meta.env.VITE_B2B_PASS;
+      
+      if (!backendUrl) {
+        toast.error("Backend URL ist nicht konfiguriert. Bitte in den Umgebungsvariablen setzen.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!username || !password) {
+        toast.error("B2B Zugangsdaten sind nicht konfiguriert. Bitte in den Umgebungsvariablen setzen.");
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${backendUrl}/api/scrape`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ 
-          url: request.url,
-          onlyNew: request.onlyNew,
-          credentials: request.credentials
+          url,
+          onlyNew,
+          credentials: {
+            username,
+            password
+          }
         }),
       });
 
@@ -81,10 +100,10 @@ const Scraper = () => {
 
           <Alert>
             <Database className="h-4 w-4" />
-            <AlertTitle>Backend erforderlich</AlertTitle>
+            <AlertTitle>Konfiguration erforderlich</AlertTitle>
             <AlertDescription>
-              Diese Funktion benötigt ein externes Backend für das Scraping.
-              Stelle sicher, dass die VITE_EXTERNAL_SCRAPER_URL konfiguriert ist.
+              Bitte stelle sicher, dass die Umgebungsvariablen VITE_EXTERNAL_SCRAPER_URL, 
+              VITE_B2B_USER und VITE_B2B_PASS in der .env Datei konfiguriert sind.
             </AlertDescription>
           </Alert>
 

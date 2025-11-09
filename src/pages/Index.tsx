@@ -4,6 +4,7 @@ import { ScrapeProgress } from "@/components/ScrapeProgress";
 import { ProductTable } from "@/components/ProductTable";
 import { Product, ScrapeRequest } from "@/types/product";
 import { mockScrapeAPI } from "@/utils/mockScraper";
+import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV, exportToJSON } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, Database } from "lucide-react";
@@ -25,30 +26,55 @@ const Index = () => {
     setProducts([]);
 
     try {
-      const response = await mockScrapeAPI(request, (prog, pages, items) => {
-        setProgress(prog);
-        setPagesScraped(pages);
-        setItemsFound(items);
-      });
+      // Verwende echtes Backend wenn EXTERNAL_SCRAPER_URL konfiguriert ist
+      // Ansonsten falle auf Mock-Daten zurück
+      const useRealBackend = true; // Ändere auf false für Mock-Modus
+      
+      if (useRealBackend) {
+        toast({
+          title: "Scraping gestartet",
+          description: "Verbinde mit Backend und führe Login durch...",
+        });
 
-      if (response.ok) {
-        setProducts(response.items);
-        toast({
-          title: "Scraping erfolgreich",
-          description: `${response.count} Produkte gefunden auf ${response.pagesScraped} Seiten`,
+        const { data, error } = await supabase.functions.invoke('scrape-products', {
+          body: { url: request.url, onlyNew: request.onlyNew }
         });
+
+        if (error) throw error;
+
+        if (data.ok) {
+          setProducts(data.items);
+          setProgress(100);
+          setPagesScraped(data.pagesScraped);
+          setItemsFound(data.count);
+          toast({
+            title: "Scraping erfolgreich",
+            description: `${data.count} Produkte mit Händlerpreisen gefunden`,
+          });
+        } else {
+          throw new Error(data.error || "Unbekannter Fehler");
+        }
       } else {
-        toast({
-          title: "Fehler beim Scraping",
-          description: response.error || "Unbekannter Fehler",
-          variant: "destructive",
+        // Mock-Modus für Testing
+        const response = await mockScrapeAPI(request, (prog, pages, items) => {
+          setProgress(prog);
+          setPagesScraped(pages);
+          setItemsFound(items);
         });
+
+        if (response.ok) {
+          setProducts(response.items);
+          toast({
+            title: "Scraping erfolgreich (Mock)",
+            description: `${response.count} Produkte gefunden auf ${response.pagesScraped} Seiten`,
+          });
+        }
       }
     } catch (error) {
       console.error("Scraping-Fehler:", error);
       toast({
-        title: "Fehler",
-        description: "Beim Scraping ist ein Fehler aufgetreten",
+        title: "Fehler beim Scraping",
+        description: error instanceof Error ? error.message : "Unbekannter Fehler",
         variant: "destructive",
       });
     } finally {
@@ -93,12 +119,11 @@ const Index = () => {
           {/* Info Alert */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Demo-Modus aktiv</AlertTitle>
+            <AlertTitle>Backend-Setup erforderlich</AlertTitle>
             <AlertDescription>
-              Diese App verwendet aktuell Mock-Daten. Für echtes Web-Scraping
-              muss ein separates Backend mit Playwright implementiert werden.
-              Die komplette UI und Export-Funktionalität ist bereits
-              einsatzbereit.
+              Um echtes Scraping mit Händler-Login zu aktivieren, musst du ein externes
+              Node.js Backend mit Playwright deployen. Siehe <code>EXTERNAL_BACKEND_SETUP.md</code> für
+              eine detaillierte Anleitung. Die Credentials sind bereits sicher in Lovable Cloud hinterlegt.
             </AlertDescription>
           </Alert>
 

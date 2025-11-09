@@ -25,7 +25,7 @@ export const ScrapeForm = ({ onScrape, isLoading }: ScrapeFormProps) => {
   const [onlyNew, setOnlyNew] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [backendUrl, setBackendUrl] = useState("http://localhost:3000");
+  const [backendUrl, setBackendUrl] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,13 +86,13 @@ export const ScrapeForm = ({ onScrape, isLoading }: ScrapeFormProps) => {
         </div>
 
         <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/50">
-          <h3 className="font-medium text-sm">Würth B2B Zugangsdaten</h3>
+          <h3 className="font-medium text-sm">B2B Zugangsdaten</h3>
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input
               id="username"
               type="text"
-              placeholder="Dein Würth Username"
+              placeholder="Dein B2B Username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -105,7 +105,7 @@ export const ScrapeForm = ({ onScrape, isLoading }: ScrapeFormProps) => {
             <Input
               id="password"
               type="password"
-              placeholder="Dein Würth Passwort"
+              placeholder="Dein B2B Passwort"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

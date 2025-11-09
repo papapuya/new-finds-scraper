@@ -6,7 +6,6 @@ import { ScrapeForm } from "@/components/ScrapeForm";
 import { ScrapeProgress } from "@/components/ScrapeProgress";
 import { ProductTable } from "@/components/ProductTable";
 import { Product, ScrapeRequest } from "@/types/product";
-import { mockScrapeAPI } from "@/utils/mockScraper";
 import { exportToCSV, exportToJSON } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
@@ -52,34 +51,55 @@ const Index = () => {
     setProducts([]);
 
     try {
-      const response = await mockScrapeAPI(request, (prog, pages, items) => {
-        setProgress(prog);
-        setPagesScraped(pages);
-        setItemsFound(items);
+      console.log('Scraping gestartet:', request);
+      
+      // Call the real edge function
+      const { data, error } = await supabase.functions.invoke('scrape-supplier', {
+        body: request,
       });
 
-      if (response.ok) {
-        setProducts(response.items);
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + 10;
+        });
+      }, 500);
+
+      if (error) {
+        clearInterval(progressInterval);
+        throw error;
+      }
+
+      clearInterval(progressInterval);
+      setProgress(100);
+
+      if (data.ok) {
+        setProducts(data.items);
+        setPagesScraped(data.pagesScraped || 0);
+        setItemsFound(data.count);
+        console.log('Scraping abgeschlossen:', data.count, 'Produkte gefunden');
         toast({
           title: "Scraping erfolgreich",
-          description: `${response.count} Produkte gefunden auf ${response.pagesScraped} Seiten`,
+          description: `${data.count} Produkte gefunden auf ${data.pagesScraped} Seiten`,
         });
       } else {
         toast({
           title: "Fehler beim Scraping",
-          description: response.error || "Unbekannter Fehler",
+          description: data.error || "Ein unbekannter Fehler ist aufgetreten",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Scraping-Fehler:", error);
+      console.error('Fehler beim Scraping:', error);
       toast({
         title: "Fehler",
-        description: "Beim Scraping ist ein Fehler aufgetreten",
+        description: error instanceof Error ? error.message : "Scraping konnte nicht gestartet werden",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
+      setProgress(100);
     }
   };
 
@@ -122,12 +142,9 @@ const Index = () => {
           {/* Info Alert */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Demo-Modus aktiv</AlertTitle>
+            <AlertTitle>Echtes Scraping aktiv</AlertTitle>
             <AlertDescription>
-              Diese App verwendet aktuell Mock-Daten. Für echtes Web-Scraping
-              muss ein separates Backend mit Playwright implementiert werden.
-              Die komplette UI und Export-Funktionalität ist bereits
-              einsatzbereit.
+              Das Tool nutzt jetzt echtes Web-Scraping. Geben Sie eine URL ein, um Produkte zu extrahieren.
             </AlertDescription>
           </Alert>
 

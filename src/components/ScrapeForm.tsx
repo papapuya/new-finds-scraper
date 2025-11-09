@@ -16,7 +16,7 @@ const credentialsSchema = z.object({
 });
 
 interface ScrapeFormProps {
-  onScrape: (request: ScrapeRequest & { credentials: { username: string; password: string } }) => Promise<void>;
+  onScrape: (request: ScrapeRequest & { credentials: { username: string; password: string }; backendUrl: string }) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -25,6 +25,7 @@ export const ScrapeForm = ({ onScrape, isLoading }: ScrapeFormProps) => {
   const [onlyNew, setOnlyNew] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [backendUrl, setBackendUrl] = useState("http://localhost:3000");
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,7 +34,7 @@ export const ScrapeForm = ({ onScrape, isLoading }: ScrapeFormProps) => {
     // Validation
     try {
       credentialsSchema.parse({ username, password, url });
-      await onScrape({ url, onlyNew, credentials: { username, password } });
+      await onScrape({ url, onlyNew, credentials: { username, password }, backendUrl });
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
@@ -63,6 +64,25 @@ export const ScrapeForm = ({ onScrape, isLoading }: ScrapeFormProps) => {
           <p className="text-sm text-muted-foreground">
             Geben Sie die URL ein, von der aus gescrapt werden soll
           </p>
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/50">
+          <h3 className="font-medium text-sm">Backend-URL</h3>
+          <div className="space-y-2">
+            <Label htmlFor="backendUrl">Scraper Backend URL</Label>
+            <Input
+              id="backendUrl"
+              type="url"
+              placeholder="https://dein-backend.onrender.com"
+              value={backendUrl}
+              onChange={(e) => setBackendUrl(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Lokal: <code>http://localhost:3000</code> | Render: <code>https://dein-service.onrender.com</code>
+            </p>
+          </div>
         </div>
 
         <div className="space-y-4 rounded-lg border border-border p-4 bg-muted/50">

@@ -18,7 +18,7 @@ const Index = () => {
   const [itemsFound, setItemsFound] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
 
-  const handleScrape = async (request: ScrapeRequest & { credentials: { username: string; password: string } }) => {
+  const handleScrape = async (request: ScrapeRequest & { credentials: { username: string; password: string }; backendUrl: string }) => {
     setIsLoading(true);
     setProgress(0);
     setPagesScraped(0);
@@ -31,8 +31,8 @@ const Index = () => {
         description: "Verbinde mit lokalem Backend...",
       });
 
-      // Rufe lokales Backend auf (muss mit 'npm start' im backend/ Ordner gestartet sein)
-      const response = await fetch('http://localhost:3000/api/scrape', {
+      // Rufe Backend auf (entweder lokal oder Render)
+      const response = await fetch(`${request.backendUrl}/api/scrape`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

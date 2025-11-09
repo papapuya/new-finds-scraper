@@ -4,7 +4,6 @@ import { ScrapeProgress } from "@/components/ScrapeProgress";
 import { ProductTable } from "@/components/ProductTable";
 import { Product, ScrapeRequest } from "@/types/product";
 import { mockScrapeAPI } from "@/utils/mockScraper";
-import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV, exportToJSON } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, Database } from "lucide-react";
@@ -18,7 +17,7 @@ const Index = () => {
   const [itemsFound, setItemsFound] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
 
-  const handleScrape = async (request: ScrapeRequest & { credentials: { username: string; password: string } }) => {
+  const handleScrape = async (request: ScrapeRequest) => {
     setIsLoading(true);
     setProgress(0);
     setPagesScraped(0);
@@ -26,57 +25,30 @@ const Index = () => {
     setProducts([]);
 
     try {
-      toast({
-        title: "Scraping gestartet",
-        description: "Verbinde mit lokalem Backend...",
+      const response = await mockScrapeAPI(request, (prog, pages, items) => {
+        setProgress(prog);
+        setPagesScraped(pages);
+        setItemsFound(items);
       });
 
-      // Rufe lokales Backend auf (muss mit 'npm start' im backend/ Ordner gestartet sein)
-      const response = await fetch('http://localhost:3000/api/scrape', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: request.url,
-          onlyNew: request.onlyNew,
-          credentials: request.credentials
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Konvertiere Backend-Format zu Frontend-Format
-        const convertedProducts: Product[] = data.products.map((p: any) => ({
-          product_title: p.title || 'N/A',
-          price: p.price || 'N/A',
-          brand: 'N/A',
-          sku: 'N/A',
-          product_url: request.url,
-          image_url: p.image || '',
-          badges: p.isNew ? 'Neuheit' : '',
-          availability_text: 'N/A',
-          rating: null,
-          category_path: 'N/A'
-        }));
-
-        setProducts(convertedProducts);
-        setProgress(100);
-        setPagesScraped(data.pagesScraped || 1);
-        setItemsFound(data.itemsFound || convertedProducts.length);
+      if (response.ok) {
+        setProducts(response.items);
         toast({
           title: "Scraping erfolgreich",
-          description: `${convertedProducts.length} Produkte gefunden`,
+          description: `${response.count} Produkte gefunden auf ${response.pagesScraped} Seiten`,
         });
       } else {
-        throw new Error(data.error || "Unbekannter Fehler");
+        toast({
+          title: "Fehler beim Scraping",
+          description: response.error || "Unbekannter Fehler",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Scraping-Fehler:", error);
       toast({
-        title: "Fehler beim Scraping",
-        description: error instanceof Error ? error.message : "Unbekannter Fehler",
+        title: "Fehler",
+        description: "Beim Scraping ist ein Fehler aufgetreten",
         variant: "destructive",
       });
     } finally {
@@ -121,13 +93,12 @@ const Index = () => {
           {/* Info Alert */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Backend erforderlich</AlertTitle>
+            <AlertTitle>Demo-Modus aktiv</AlertTitle>
             <AlertDescription>
-              <strong>Lokales Backend starten:</strong><br />
-              <code>cd backend && npm install && npx playwright install chromium && npm start</code>
-              <br /><br />
-              <strong>Oder auf Render deployen:</strong><br />
-              Siehe <code>backend/README.md</code> für Anleitung zum Deployment auf Render.
+              Diese App verwendet aktuell Mock-Daten. Für echtes Web-Scraping
+              muss ein separates Backend mit Playwright implementiert werden.
+              Die komplette UI und Export-Funktionalität ist bereits
+              einsatzbereit.
             </AlertDescription>
           </Alert>
 

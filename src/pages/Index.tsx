@@ -26,49 +26,54 @@ const Index = () => {
     setProducts([]);
 
     try {
-      // Verwende echtes Backend wenn EXTERNAL_SCRAPER_URL konfiguriert ist
-      // Ansonsten falle auf Mock-Daten zurück
-      const useRealBackend = true; // Ändere auf false für Mock-Modus
-      
-      if (useRealBackend) {
+      toast({
+        title: "Scraping gestartet",
+        description: "Verbinde mit lokalem Backend...",
+      });
+
+      // Rufe lokales Backend auf (muss mit 'npm start' im backend/ Ordner gestartet sein)
+      const response = await fetch('http://localhost:3000/api/scrape', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: request.url,
+          onlyNew: request.onlyNew,
+          credentials: {
+            username: 'DEIN_USERNAME', // TODO: Hier deine Würth-Zugangsdaten eintragen
+            password: 'DEIN_PASSWORD'
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Konvertiere Backend-Format zu Frontend-Format
+        const convertedProducts: Product[] = data.products.map((p: any) => ({
+          product_title: p.title || 'N/A',
+          price: p.price || 'N/A',
+          brand: 'N/A',
+          sku: 'N/A',
+          product_url: request.url,
+          image_url: p.image || '',
+          badges: p.isNew ? 'Neuheit' : '',
+          availability_text: 'N/A',
+          rating: null,
+          category_path: 'N/A'
+        }));
+
+        setProducts(convertedProducts);
+        setProgress(100);
+        setPagesScraped(data.pagesScraped || 1);
+        setItemsFound(data.itemsFound || convertedProducts.length);
         toast({
-          title: "Scraping gestartet",
-          description: "Verbinde mit Backend und führe Login durch...",
+          title: "Scraping erfolgreich",
+          description: `${convertedProducts.length} Produkte gefunden`,
         });
-
-        const { data, error } = await supabase.functions.invoke('scrape-products', {
-          body: { url: request.url, onlyNew: request.onlyNew }
-        });
-
-        if (error) throw error;
-
-        if (data.ok) {
-          setProducts(data.items);
-          setProgress(100);
-          setPagesScraped(data.pagesScraped);
-          setItemsFound(data.count);
-          toast({
-            title: "Scraping erfolgreich",
-            description: `${data.count} Produkte mit Händlerpreisen gefunden`,
-          });
-        } else {
-          throw new Error(data.error || "Unbekannter Fehler");
-        }
       } else {
-        // Mock-Modus für Testing
-        const response = await mockScrapeAPI(request, (prog, pages, items) => {
-          setProgress(prog);
-          setPagesScraped(pages);
-          setItemsFound(items);
-        });
-
-        if (response.ok) {
-          setProducts(response.items);
-          toast({
-            title: "Scraping erfolgreich (Mock)",
-            description: `${response.count} Produkte gefunden auf ${response.pagesScraped} Seiten`,
-          });
-        }
+        throw new Error(data.error || "Unbekannter Fehler");
       }
     } catch (error) {
       console.error("Scraping-Fehler:", error);
@@ -119,11 +124,11 @@ const Index = () => {
           {/* Info Alert */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Backend-Setup erforderlich</AlertTitle>
+            <AlertTitle>Lokales Backend erforderlich</AlertTitle>
             <AlertDescription>
-              Um echtes Scraping mit Händler-Login zu aktivieren, musst du ein externes
-              Node.js Backend mit Playwright deployen. Siehe <code>EXTERNAL_BACKEND_SETUP.md</code> für
-              eine detaillierte Anleitung. Die Credentials sind bereits sicher in Lovable Cloud hinterlegt.
+              Starte das Backend lokal mit: <code>cd backend && npm install && npx playwright install chromium && npm start</code>
+              <br />
+              Trage dann deine Würth-Zugangsdaten in <code>src/pages/Index.tsx</code> ein (Zeile 43-44).
             </AlertDescription>
           </Alert>
 

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import Scraper from "./pages/Scraper";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/scraper" element={<Scraper />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/pixi" element={<div className="container mx-auto px-4 py-8"><h1 className="text-4xl font-bold">Pixi Integration - Coming Soon</h1></div>} />

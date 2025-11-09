@@ -1,11 +1,12 @@
 import { NavLink } from "@/components/NavLink";
-import { Home, Globe, Database, Package, FileSpreadsheet, Settings, LogIn, LogOut, User } from "lucide-react";
+import { Home, Globe, Database, Package, FileSpreadsheet, Settings, LogIn, LogOut, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ export const Navigation = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const { isAdmin } = useUserRole(user);
 
   useEffect(() => {
     // Set up auth state listener
@@ -125,6 +127,15 @@ export const Navigation = () => {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Mein Konto</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/admin")}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Abmelden

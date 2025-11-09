@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Navigation } from "@/components/Navigation";
 import { ScrapeForm } from "@/components/ScrapeForm";
 import { ScrapeProgress } from "@/components/ScrapeProgress";
 import { ProductTable } from "@/components/ProductTable";
@@ -8,9 +9,8 @@ import { Product, ScrapeRequest } from "@/types/product";
 import { mockScrapeAPI } from "@/utils/mockScraper";
 import { exportToCSV, exportToJSON } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, Database, LogOut } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { User } from "@supabase/supabase-js";
 
 const Index = () => {
@@ -99,38 +99,23 @@ const Index = () => {
     });
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Erfolgreich abgemeldet",
-    });
-  };
-
   if (!user) {
     return null;
   }
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
+      
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="space-y-8">
           {/* Header */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Database className="h-10 w-10 text-primary" />
-                <h1 className="text-4xl font-bold tracking-tight">
-                  Neuheiten Scraper
-                </h1>
-              </div>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Abmelden
-              </Button>
-            </div>
-            <p className="text-lg text-muted-foreground">
-              Erfasse Produkte mit "Neuheit"-Kennzeichnung automatisch aus
-              Online-Shops
+            <h1 className="text-3xl font-bold tracking-tight">
+              Dashboard
+            </h1>
+            <p className="text-muted-foreground">
+              Erfasse Produkte mit "Neuheit"-Kennzeichnung automatisch aus Online-Shops
             </p>
           </div>
 

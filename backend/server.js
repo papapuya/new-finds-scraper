@@ -34,14 +34,92 @@ async function ensureLogin(page, credentials, baseUrl) {
     }
   }
 
-  console.log('Logging in...');
-  await page.goto(baseUrl);
-  await page.fill('input[name="username"]', credentials.username);
-  await page.fill('input[name="password"]', credentials.password);
-  await page.click('button[type="submit"]');
+  console.log('Logging in to:', `${baseUrl}/login`);
+  await page.goto(`${baseUrl}/login`);
+  await page.waitForTimeout(2000);
+
+  // Try multiple selector strategies for username field
+  const usernameSelectors = [
+    'input[name="username"]',
+    'input[name="email"]',
+    'input[type="email"]',
+    'input[id*="user"]',
+    'input[id*="login"]',
+    'input[placeholder*="Benutzername"]',
+    'input[placeholder*="E-Mail"]'
+  ];
+
+  let usernameField = null;
+  for (const selector of usernameSelectors) {
+    const field = await page.locator(selector).first().catch(() => null);
+    if (field && await field.isVisible().catch(() => false)) {
+      usernameField = selector;
+      console.log('Found username field with selector:', selector);
+      break;
+    }
+  }
+
+  if (!usernameField) {
+    throw new Error('Could not find username/email input field on login page');
+  }
+
+  // Try multiple selector strategies for password field
+  const passwordSelectors = [
+    'input[name="password"]',
+    'input[type="password"]',
+    'input[id*="pass"]',
+    'input[placeholder*="Passwort"]'
+  ];
+
+  let passwordField = null;
+  for (const selector of passwordSelectors) {
+    const field = await page.locator(selector).first().catch(() => null);
+    if (field && await field.isVisible().catch(() => false)) {
+      passwordField = selector;
+      console.log('Found password field with selector:', selector);
+      break;
+    }
+  }
+
+  if (!passwordField) {
+    throw new Error('Could not find password input field on login page');
+  }
+
+  // Fill in credentials
+  await page.fill(usernameField, credentials.username);
+  await page.fill(passwordField, credentials.password);
+
+  // Try to find and click submit button
+  const submitSelectors = [
+    'button[type="submit"]',
+    'input[type="submit"]',
+    'button:has-text("Anmelden")',
+    'button:has-text("Login")',
+    'button:has-text("Einloggen")'
+  ];
+
+  let submitButton = null;
+  for (const selector of submitSelectors) {
+    const button = await page.locator(selector).first().catch(() => null);
+    if (button && await button.isVisible().catch(() => false)) {
+      submitButton = selector;
+      console.log('Found submit button with selector:', selector);
+      break;
+    }
+  }
+
+  if (submitButton) {
+    await page.click(submitButton);
+  } else {
+    // Fallback: press Enter in password field
+    console.log('No submit button found, pressing Enter in password field');
+    await page.locator(passwordField).press('Enter');
+  }
+
   await page.waitForTimeout(3000);
 
   const newCookies = await page.context().cookies();
+  console.log('Login completed, cookies saved');
   // Optional: Save cookies to file or DB
 }
 

@@ -3,89 +3,38 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Shield, Users, Activity, Database, Settings, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { 
-  Shield, 
-  Users, 
-  Database, 
-  Activity, 
-  Settings,
-  UserPlus,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle
-} from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const { isAdmin, isLoading } = useUserRole(user);
-  const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/auth");
-        return;
-      }
-      setUser(session.user);
-    };
-    checkAuth();
-  }, [navigate]);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
-    if (!isLoading && !isAdmin && user) {
-      toast.error("Zugriff verweigert - Nur für Administratoren");
+    if (!isLoading && !isAdmin) {
       navigate("/dashboard");
     }
-  }, [isAdmin, isLoading, navigate, user]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      loadUsers();
-    }
-  }, [isAdmin]);
-
-  const loadUsers = async () => {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("*");
-    
-    if (!error && data) {
-      setUsers(data);
-    }
-  };
-
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newAdminEmail) {
-      toast.error("Bitte E-Mail-Adresse eingeben");
-      return;
-    }
-
-    try {
-      // Find user by email (this would need a backend function in production)
-      toast.info("Admin-Zuweisung in Entwicklung - Nutze die Datenbank direkt");
-      setNewAdminEmail("");
-    } catch (error) {
-      toast.error("Fehler beim Hinzufügen des Admins");
-    }
-  };
+  }, [isAdmin, isLoading, navigate]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-background">
-        <div className="text-center">
-          <Shield className="h-12 w-12 animate-pulse text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Berechtigungen werden überprüft...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -94,8 +43,70 @@ const AdminDashboard = () => {
     return null;
   }
 
+  const stats = [
+    {
+      title: "Gesamt Nutzer",
+      value: "1,234",
+      change: "+12.5%",
+      icon: Users,
+      trend: "up",
+    },
+    {
+      title: "Aktive Sessions",
+      value: "89",
+      change: "+5.2%",
+      icon: Activity,
+      trend: "up",
+    },
+    {
+      title: "Datenbank Größe",
+      value: "2.4 GB",
+      change: "+18.3%",
+      icon: Database,
+      trend: "up",
+    },
+    {
+      title: "System Status",
+      value: "Optimal",
+      change: "100%",
+      icon: TrendingUp,
+      trend: "up",
+    },
+  ];
+
+  const adminTools = [
+    {
+      title: "Benutzerverwaltung",
+      description: "Verwalte Benutzer, Rollen und Berechtigungen",
+      icon: Users,
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+    },
+    {
+      title: "System Einstellungen",
+      description: "Konfiguriere System-Parameter und Einstellungen",
+      icon: Settings,
+      color: "text-purple-500",
+      bgColor: "bg-purple-500/10",
+    },
+    {
+      title: "Sicherheit",
+      description: "Überwache Sicherheitsereignisse und Logs",
+      icon: Shield,
+      color: "text-red-500",
+      bgColor: "bg-red-500/10",
+    },
+    {
+      title: "Datenbank Admin",
+      description: "Verwalte Datenbank-Tabellen und Backups",
+      icon: Database,
+      color: "text-green-500",
+      bgColor: "bg-green-500/10",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -104,222 +115,107 @@ const AdminDashboard = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Admin Dashboard
             </h1>
+            <Badge variant="secondary" className="ml-2">
+              Administrator
+            </Badge>
           </div>
-          <p className="text-muted-foreground">Zentrale Verwaltung & Kontrolle</p>
+          <p className="text-muted-foreground">
+            Willkommen im Administrator-Bereich. Hier haben Sie vollständigen Zugriff auf alle System-Funktionen.
+          </p>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Gesamtnutzer
-              </CardTitle>
-              <Users className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{users.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Registrierte Accounts
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                System Status
-              </CardTitle>
-              <Activity className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-6 w-6 text-green-500" />
-                <span className="text-2xl font-bold">Online</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Alle Systeme betriebsbereit
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Datenbank
-              </CardTitle>
-              <Database className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">98%</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Verfügbare Kapazität
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-primary/20 hover:border-primary/40 transition-colors">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Performance
-              </CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">+24%</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Geschwindigkeit vs. letzte Woche
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
-            <TabsTrigger value="users">Benutzer</TabsTrigger>
-            <TabsTrigger value="system">System</TabsTrigger>
-            <TabsTrigger value="settings">Einstellungen</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
-                  Admin hinzufügen
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          {stats.map((stat) => (
+            <Card key={stat.title} className="border-primary/20 hover:border-primary/40 transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {stat.title}
                 </CardTitle>
-                <CardDescription>
-                  Benutzer Admin-Rechte zuweisen
-                </CardDescription>
+                <stat.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleAddAdmin} className="flex gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor="admin-email" className="sr-only">E-Mail</Label>
-                    <Input
-                      id="admin-email"
-                      type="email"
-                      placeholder="benutzer@beispiel.de"
-                      value={newAdminEmail}
-                      onChange={(e) => setNewAdminEmail(e.target.value)}
-                    />
-                  </div>
-                  <Button type="submit">
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin zuweisen
-                  </Button>
-                </form>
-                <p className="text-xs text-muted-foreground mt-4">
-                  <AlertCircle className="inline h-3 w-3 mr-1" />
-                  Hinweis: Aktuell können Rollen nur direkt in der Datenbank verwaltet werden
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <span className="text-green-500">{stat.change}</span>
+                  <span>seit letztem Monat</span>
                 </p>
               </CardContent>
             </Card>
+          ))}
+        </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Benutzerrollen</CardTitle>
-                <CardDescription>Übersicht aller zugewiesenen Rollen</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {users.length > 0 ? (
-                  <div className="space-y-2">
-                    {users.map((userRole) => (
-                      <div
-                        key={userRole.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Shield className="h-4 w-4 text-primary" />
-                          <span className="font-medium">{userRole.user_id.slice(0, 8)}...</span>
-                        </div>
-                        <span className="text-sm px-3 py-1 rounded-full bg-primary/20 text-primary font-medium">
-                          {userRole.role}
-                        </span>
+        {/* Admin Tools */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Admin Tools</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {adminTools.map((tool) => (
+              <Card 
+                key={tool.title} 
+                className="border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg cursor-pointer group"
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`p-3 rounded-lg ${tool.bgColor}`}>
+                        <tool.icon className={`h-6 w-6 ${tool.color}`} />
                       </div>
-                    ))}
+                      <div>
+                        <CardTitle className="group-hover:text-primary transition-colors">
+                          {tool.title}
+                        </CardTitle>
+                        <CardDescription className="mt-1">
+                          {tool.description}
+                        </CardDescription>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    Keine Benutzerrollen gefunden
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </CardHeader>
+                <CardContent>
+                  <Button variant="outline" className="w-full">
+                    Öffnen
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
 
-          <TabsContent value="system" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  System-Metriken
-                </CardTitle>
-                <CardDescription>Echtzeit-Performance-Überwachung</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium">CPU Auslastung</span>
-                      <span className="text-sm text-muted-foreground">23%</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full w-[23%] bg-green-500 rounded-full"></div>
-                    </div>
+        {/* Recent Activity */}
+        <Card className="border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Letzte Aktivitäten
+            </CardTitle>
+            <CardDescription>
+              Die neuesten System-Ereignisse und Admin-Aktionen
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[
+                { action: "Neuer Benutzer registriert", time: "vor 5 Minuten", type: "info" },
+                { action: "Datenbank Backup erstellt", time: "vor 1 Stunde", type: "success" },
+                { action: "System Update verfügbar", time: "vor 3 Stunden", type: "warning" },
+                { action: "Sicherheitslog überprüft", time: "vor 5 Stunden", type: "info" },
+              ].map((activity, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`h-2 w-2 rounded-full ${
+                      activity.type === "success" ? "bg-green-500" :
+                      activity.type === "warning" ? "bg-yellow-500" :
+                      "bg-blue-500"
+                    }`} />
+                    <span className="font-medium">{activity.action}</span>
                   </div>
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium">Speicher</span>
-                      <span className="text-sm text-muted-foreground">45%</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full w-[45%] bg-blue-500 rounded-full"></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm font-medium">Netzwerk</span>
-                      <span className="text-sm text-muted-foreground">12%</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full w-[12%] bg-primary rounded-full"></div>
-                    </div>
-                  </div>
+                  <span className="text-sm text-muted-foreground">{activity.time}</span>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="settings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  System-Einstellungen
-                </CardTitle>
-                <CardDescription>Konfiguration und Verwaltung</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Database className="mr-2 h-4 w-4" />
-                    Datenbank-Backup erstellen
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Users className="mr-2 h-4 w-4" />
-                    Benutzer exportieren
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Activity className="mr-2 h-4 w-4" />
-                    Logs anzeigen
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

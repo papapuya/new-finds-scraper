@@ -1,29 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Shield, Users, Activity, Database, Settings, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { User as SupabaseUser } from "@supabase/supabase-js";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const { isAdmin, isLoading } = useUserRole(user);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { isAdmin, isLoading } = useUserRole();
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {

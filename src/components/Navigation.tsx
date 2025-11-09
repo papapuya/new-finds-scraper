@@ -21,7 +21,7 @@ export const Navigation = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<SupabaseUser | null>(null);
-  const { isAdmin } = useUserRole(user);
+  const { isAdmin } = useUserRole();
 
   useEffect(() => {
     // Set up auth state listener

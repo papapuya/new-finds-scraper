@@ -18,7 +18,7 @@ const Index = () => {
   const [itemsFound, setItemsFound] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
 
-  const handleScrape = async (request: ScrapeRequest) => {
+  const handleScrape = async (request: ScrapeRequest & { credentials: { username: string; password: string } }) => {
     setIsLoading(true);
     setProgress(0);
     setPagesScraped(0);
@@ -40,10 +40,7 @@ const Index = () => {
         body: JSON.stringify({
           url: request.url,
           onlyNew: request.onlyNew,
-          credentials: {
-            username: 'DEIN_USERNAME', // TODO: Hier deine Würth-Zugangsdaten eintragen
-            password: 'DEIN_PASSWORD'
-          }
+          credentials: request.credentials
         })
       });
 
@@ -124,11 +121,13 @@ const Index = () => {
           {/* Info Alert */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Lokales Backend erforderlich</AlertTitle>
+            <AlertTitle>Backend erforderlich</AlertTitle>
             <AlertDescription>
-              Starte das Backend lokal mit: <code>cd backend && npm install && npx playwright install chromium && npm start</code>
-              <br />
-              Trage dann deine Würth-Zugangsdaten in <code>src/pages/Index.tsx</code> ein (Zeile 43-44).
+              <strong>Lokales Backend starten:</strong><br />
+              <code>cd backend && npm install && npx playwright install chromium && npm start</code>
+              <br /><br />
+              <strong>Oder auf Render deployen:</strong><br />
+              Siehe <code>backend/README.md</code> für Anleitung zum Deployment auf Render.
             </AlertDescription>
           </Alert>
 

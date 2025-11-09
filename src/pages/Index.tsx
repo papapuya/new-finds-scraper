@@ -18,7 +18,7 @@ const Index = () => {
   const [itemsFound, setItemsFound] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
 
-  const handleScrape = async (url: string, onlyNew: boolean) => {
+  const handleScrape = async (request: ScrapeRequest & { credentials: { username: string; password: string } }) => {
     setIsLoading(true);
     setProgress(0);
     setPagesScraped(0);
@@ -26,48 +26,21 @@ const Index = () => {
     setProducts([]);
 
     try {
-      const backendUrl = import.meta.env.VITE_EXTERNAL_SCRAPER_URL;
-      const username = import.meta.env.VITE_B2B_USER;
-      const password = import.meta.env.VITE_B2B_PASS;
-      
-      if (!backendUrl) {
-        toast({
-          title: "Konfigurationsfehler",
-          description: "Backend URL ist nicht konfiguriert. Bitte VITE_EXTERNAL_SCRAPER_URL in .env setzen.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      if (!username || !password) {
-        toast({
-          title: "Konfigurationsfehler",
-          description: "B2B Zugangsdaten sind nicht konfiguriert. Bitte VITE_B2B_USER und VITE_B2B_PASS in .env setzen.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-        return;
-      }
-
       toast({
         title: "Scraping gestartet",
-        description: "Verbinde mit Backend...",
+        description: "Verbinde mit lokalem Backend...",
       });
 
-      // Rufe Backend auf (entweder lokal oder Render)
-      const response = await fetch(`${backendUrl}/api/scrape`, {
+      // Rufe lokales Backend auf (muss mit 'npm start' im backend/ Ordner gestartet sein)
+      const response = await fetch('http://localhost:3000/api/scrape', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url,
-          onlyNew,
-          credentials: {
-            username,
-            password
-          }
+          url: request.url,
+          onlyNew: request.onlyNew,
+          credentials: request.credentials
         })
       });
 
@@ -80,7 +53,7 @@ const Index = () => {
           price: p.price || 'N/A',
           brand: 'N/A',
           sku: 'N/A',
-          product_url: url,
+          product_url: request.url,
           image_url: p.image || '',
           badges: p.isNew ? 'Neuheit' : '',
           availability_text: 'N/A',
@@ -148,13 +121,13 @@ const Index = () => {
           {/* Info Alert */}
           <Alert>
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Konfiguration erforderlich</AlertTitle>
+            <AlertTitle>Backend erforderlich</AlertTitle>
             <AlertDescription>
-              Bitte stelle sicher, dass die Umgebungsvariablen VITE_EXTERNAL_SCRAPER_URL, 
-              VITE_B2B_USER und VITE_B2B_PASS in der .env Datei konfiguriert sind.
-              <br /><br />
               <strong>Lokales Backend starten:</strong><br />
               <code>cd backend && npm install && npx playwright install chromium && npm start</code>
+              <br /><br />
+              <strong>Oder auf Render deployen:</strong><br />
+              Siehe <code>backend/README.md</code> für Anleitung zum Deployment auf Render.
             </AlertDescription>
           </Alert>
 

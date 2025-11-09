@@ -14,114 +14,16 @@ export type Database = {
   }
   public: {
     Tables: {
-      suppliers: {
-        Row: {
-          active: boolean | null
-          auto_login_enabled: boolean | null
-          created_at: string | null
-          created_by: string | null
-          css_selector_product_link: string | null
-          description: string | null
-          id: string
-          login_url: string | null
-          name: string
-          password_field_selector: string | null
-          password_value: string | null
-          product_selectors: Json | null
-          session_cookie: string | null
-          supplier_id: string
-          test_url: string | null
-          updated_at: string | null
-          url_pattern: string
-          use_session_cookies: boolean | null
-          user_agent: string | null
-          username_field_selector: string | null
-          username_value: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          auto_login_enabled?: boolean | null
-          created_at?: string | null
-          created_by?: string | null
-          css_selector_product_link?: string | null
-          description?: string | null
-          id?: string
-          login_url?: string | null
-          name: string
-          password_field_selector?: string | null
-          password_value?: string | null
-          product_selectors?: Json | null
-          session_cookie?: string | null
-          supplier_id: string
-          test_url?: string | null
-          updated_at?: string | null
-          url_pattern: string
-          use_session_cookies?: boolean | null
-          user_agent?: string | null
-          username_field_selector?: string | null
-          username_value?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          auto_login_enabled?: boolean | null
-          created_at?: string | null
-          created_by?: string | null
-          css_selector_product_link?: string | null
-          description?: string | null
-          id?: string
-          login_url?: string | null
-          name?: string
-          password_field_selector?: string | null
-          password_value?: string | null
-          product_selectors?: Json | null
-          session_cookie?: string | null
-          supplier_id?: string
-          test_url?: string | null
-          updated_at?: string | null
-          url_pattern?: string
-          use_session_cookies?: boolean | null
-          user_agent?: string | null
-          username_field_selector?: string | null
-          username_value?: string | null
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -248,8 +150,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "user"],
-    },
+    Enums: {},
   },
 } as const
